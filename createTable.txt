@@ -1,0 +1,79 @@
+CREATE SCHEMA projekt;
+SET SEARCH_PATH TO projekt;
+
+-------------------------------------------------------------------------
+
+CREATE TABLE kraje ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
+ALTER TABLE kraje ADD PRIMARY KEY (id);
+ALTER TABLE kraje ALTER COLUMN nazwa SET NOT NULL;
+
+
+CREATE TABLE autorzy ( id int, kraj_id int, imie varchar(30), bio varchar(150), utworzono timestamp, zaktualizowano timestamp) ;
+ALTER TABLE autorzy ADD SERIAL PRIMARY KEY (id);
+ALTER TABLE autorzy ALTER COLUMN kraj_id SET NOT NULL;
+ALTER TABLE autorzy ALTER COLUMN imie SET NOT NULL;
+ALTER TABLE autorzy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+
+
+CREATE TABLE uzytkownicy ( id int, kraj_id int, imie varchar(30), utworzono timestamp, zaktualizowano timestamp) ;
+ALTER TABLE uzytkownicy ADD PRIMARY KEY (id);
+ALTER TABLE uzytkownicy ALTER COLUMN kraj_id SET NOT NULL;
+ALTER TABLE uzytkownicy ALTER COLUMN imie SET NOT NULL;
+ALTER TABLE uzytkownicy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+
+
+CREATE TABLE gatunki ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
+ALTER TABLE gatunki ADD PRIMARY KEY (id);
+
+
+CREATE TABLE albumy ( id int, autor_id int, nazwa varchar(30), rok int, utworzono timestamp, zaktualizowano timestamp) ;
+ALTER TABLE albumy ADD PRIMARY KEY (id);
+ALTER TABLE albumy ADD FOREIGN KEY (autor_id) REFERENCES autorzy (id);
+
+
+CREATE TABLE piesni ( id int, album_id int, nazwa varchar(30), ranking int, utworzono timestamp, zaktualizowano timestamp) ;
+ALTER TABLE piesni ADD PRIMARY KEY (id);
+ALTER TABLE piesni ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
+
+
+/// adding values to kraje table ///
+/// adding values to gatunki table ///
+
+
+CREATE TABLE piesni_gatunki ( id int, piesn_id int, gatunek_id int) ;  
+ALTER TABLE piesni_gatunki ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
+ALTER TABLE piesni_gatunki ADD FOREIGN KEY (gatunek_id) REFERENCES gatunki (id);
+
+
+
+
+
+CREATE TABLE playlisty ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
+ALTER TABLE playlisty ADD PRIMARY KEY (id);
+
+
+
+
+-------------------------------------------------------------------------
+
+CREATE TYPE role_enum AS ENUM ('tworca', 'sluchacz');
+CREATE TABLE uzytkownicy_playlisty ( id int, uzytkownik_id int, playlista_id int, rola ROLE_ENUM) ;  
+ALTER TABLE uzytkownicy_playlisty ADD FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy (id);
+ALTER TABLE uzytkownicy_playlisty ADD FOREIGN KEY (playlista_id) REFERENCES playlisty (id);
+
+
+CREATE TABLE playlisty_piesni ( id int, playlista_id int, piesn_id int) ;  
+ALTER TABLE playlisty_piesni ADD FOREIGN KEY (playlista_id) REFERENCES playlisty (id);
+ALTER TABLE playlisty_piesni ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
+
+
+
+
+
+CREATE TABLE autorzy_albumy ( id int, autor_id int, album_id int) ;  
+ALTER TABLE autorzy_albumy ADD FOREIGN KEY (autor_id) REFERENCES autorzy (id);
+ALTER TABLE autorzy_albumy ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
+
+
+
+

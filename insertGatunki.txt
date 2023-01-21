@@ -1,0 +1,24 @@
+INSERT INTO gatunki ( id, nazwa, utworzono, zaktualizowano) VALUES
+(1, 'Blues', current_timestamp, null),
+(2, 'Country', current_timestamp, null),
+(3, 'Dance', current_timestamp, null),
+(4, 'Drum and bass', current_timestamp, null),
+(5, 'Electronica', current_timestamp, null),
+(6, 'Folk', current_timestamp, null),
+(7, 'Funk', current_timestamp, null),
+(8, 'Heavy Metal ', current_timestamp, null),
+(9, 'Hip Hop', current_timestamp, null),
+(10, 'Rap', current_timestamp, null),
+(11, 'Muzyka klasyczna', current_timestamp, null),
+(12, 'Pop', current_timestamp, null),
+(13, 'Rave', current_timestamp, null),
+(14, 'R&B', current_timestamp, null),
+(15, 'Reggae', current_timestamp, null),
+(16, 'Rock', current_timestamp, null),
+(17, 'Rock and roll', current_timestamp, null),
+(18, 'Soul', current_timestamp, null),
+(19, 'Techno', current_timestamp, null),
+(20, 'Trance', current_timestamp, null),
+(21, 'K-pop', current_timestamp, null);
+
+

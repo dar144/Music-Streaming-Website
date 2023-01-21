@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=autor.imie%></title>
+</head>
+<body>
+    <h1><%=autor.imie%></h1>
+    <ul>
+        <li>
+            <b>Kraj </b><%=kraj.nazwa%>
+        </li>
+        <li>
+            <b>Bio </b><%=autor.bio%>
+        </li>
+        <li>
+            <b>Albumy</b>
+            <ul>
+                <% for(let a of albumy) { %>
+                    <li>
+                        <a href="/autorzy/<%=autor.id%>/<%=a.id%>"><b><%=a.nazwa%></b></a> (<%=a.year%>)
+                    </li>
+                <% }%>
+            </ul>
+        </li>
+    </ul>
+    <h2>Dodaj album</h2>
+    <form action="/autorzy/<%=autor.id%>" method="POST">
+        <input type="text" name="nazwa" required>
+        <input type="number" name="year" min="1700" max="2023" value="2023" required>
+        <button>zapisz</button>
+    </form>
+    <a href="/autorzy">lista autorów</a>
+
+</body>
+</html>

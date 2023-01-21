@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=album.nazwa%></title>
+</head>
+<body>
+    <h1><%=album.nazwa%></h1>
+    <ul>
+        <li><b>Autor </b><%=autor.imie%></li>
+        <li><b>Rok </b><%=album.year%></li>
+        <li>
+            <b>Pieśni</b>
+            <ul>
+                <% for(let p of piesni) { %>
+                    <li>
+                        <%=p.nazwa%>
+                    </li>
+                <% }%>
+            </ul>
+        </li>
+    </ul>
+    <h2>Dodaj pieśnię</h2>
+    <form action="/autorzy/<%=autor.id%>/<%=album.id%>" method="POST">
+        <div>
+            <label for="nazwa">Nazwa </label>
+            <input type="text" name="nazwa" required>
+        </div>
+        <% for(let g of gatunki) { %>
+            <div>
+                <input type="checkbox" name="gatunek" value="<%=g.nazwa%>">
+                <label for="gatunek"><%=g.nazwa%></label>
+            </div>
+        <% }%>
+        <button>zapisz</button>
+    </form>
+    <a href="/autorzy/<%=autor.id%>">lista albomów</a>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regestracja Autora</title>
+</head>
+
+<body>
+    <h1>Regestracja autora</h1>
+    <form action="/registracja/autor" method="POST">
+        <div>
+            <label for="imie">Imie:</label>
+            <input type="text" name="imie" required>
+        </div>
+        <div>
+            <label for="kraj_id">Kraj:</label>
+            <select name="kraj_id" required>
+                <% for(let k of kraje) { %>
+                    <option value="<%=k.id%>">
+                        <%=k.nazwa%>
+                    </option>
+                    <% }%>
+            </select>
+        </div>
+        <div>
+            <textarea name="bio" id="bio" cols="30" rows="10"></textarea>
+        </div>
+        <div><button>Zapisz</button></div>
+    </form>
+    <a href="/registracja">strona poprzednia</a>
+</body>
+
+</html>
