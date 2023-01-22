@@ -2,18 +2,11 @@ const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
 dotenv.config();
-const { Pool } = require('pg')
 const methodOverride = require('method-override')
 const path = require('path')
-const { v4: uuid } = require('uuid');
 const db = require('./queries')
 
-const pool = new Pool({
-    user: 'u0haidukevich',
-    database: 'u0haidukevich',
-    password: '0haidukevich',
-    port: 5432,
-})
+
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
@@ -21,14 +14,14 @@ app.use(methodOverride('_method'))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
-function buildlist(listName,labelName){
-    var controls = document.getElementsByName(listName);
-    var label = document.getElementsByName(labelName);
-    label.value = '';
-    for(var i=0;i<controls.length;i++){
-       label.value += controls[i].value.toString()+',';
-    }
-}
+// function buildlist(listName,labelName){
+//     var controls = document.getElementsByName(listName);
+//     var label = document.getElementsByName(labelName);
+//     label.value = '';
+//     for(var i=0;i<controls.length;i++){
+//        label.value += controls[i].value.toString()+',';
+//     }
+// }
 
 
 app.get('/', (req, res) => {
@@ -115,7 +108,8 @@ app.get('/autorzy/:id', async (req, res) => {
     const autor = await db.getAutorById(id);
     const kraj = await db.getKrajById(autor.kraj_id);
     const albumy  = await db.getAlbumy(autor.id);
-    res.render('strony/autorInfo', { autor, kraj, albumy });
+    const liczbaPiesni = await db.getLiczbaPiesni(autor.id);
+    res.render('strony/autorInfo', { autor, kraj, albumy, liczbaPiesni });
 });
 
 app.post('/autorzy/:id', async (req, res) => {

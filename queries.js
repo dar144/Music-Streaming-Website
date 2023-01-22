@@ -77,6 +77,17 @@ const getAlbumy = async (id) => {
     }
 };
 
+const getLiczbaPiesni = async (id) => {
+    try {
+        // TODO Use our fancy view
+        const liczbaPiesniByAutor = await pool.query('SELECT count FROM projekt.liczba_piesni_widok WHERE autor_id=$1', [id]);
+        return liczbaPiesniByAutor.rows[0]?.count;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+}
+
 const getPiesni = async (id) => {
     try {
         const piesni = await pool.query('SELECT * FROM projekt.piesni WHERE album_id=$1 ORDER BY nazwa', [id]);
@@ -231,8 +242,8 @@ const getAlbumById = async (id) => {
 const insertPiesni = async (id, album_id, nazwa) => {
     try {
         await pool.query(
-            `INSERT INTO projekt.piesni ("id", "album_id", "nazwa", "ranking", "utworzono", "zaktualizowano")  
-             VALUES ($1, $2, $3, 0, current_timestamp, null)`, [id, album_id, nazwa]);
+            `INSERT INTO projekt.piesni ("id", "album_id", "nazwa", "ranking")  
+             VALUES ($1, $2, $3, 0)`, [id, album_id, nazwa]);
         return true;
     } catch (error) {
         console.error(error.stack);
@@ -267,4 +278,5 @@ module.exports = {
     getKrajById,
     getAlbumById,
     getAutorByAlbumId,
+    getLiczbaPiesni
 }

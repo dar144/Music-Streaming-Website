@@ -77,3 +77,61 @@ ALTER TABLE autorzy_albumy ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
 
 
 
+-------------------------------------------------------------------------
+Views
+
+
+CREATE VIEW liczba_piesni_widok AS
+  SELECT albumy.autor_id as autor_id, count(*) as count
+  FROM piesni
+  inner join albumy on albumy.id = piesni.album_id
+  group by albumy.autor_id
+
+
+
+---------------------------------------------------------------------------
+
+
+Data validation
+
+- constraints
+
+
+
+Triggers
+
+CREATE OR REPLACE FUNCTION set_utworzono() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.utworzono = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER set_utworzono_on_insert
+    BEFORE INSERT ON piesni
+    FOR EACH ROW
+    EXECUTE PROCEDURE set_utworzono();
+
+
+
+
+CREATE OR REPLACE FUNCTION set_created_at() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.utworzono = NOW();
+    EXECUTE format('UPDATE %I SET utworzono = NOW() WHERE id = %L',TG_TABLE_NAME,NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER set_created_at_on_insert
+    BEFORE INSERT ON ALL TABLES
+    FOR EACH STATEMENT
+    EXECUTE FUNCTION set_created_at();
+
+
+
+
+
+
