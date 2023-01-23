@@ -7,21 +7,11 @@ const path = require('path')
 const db = require('./queries')
 
 
-
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(methodOverride('_method'))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
-
-// function buildlist(listName,labelName){
-//     var controls = document.getElementsByName(listName);
-//     var label = document.getElementsByName(labelName);
-//     label.value = '';
-//     for(var i=0;i<controls.length;i++){
-//        label.value += controls[i].value.toString()+',';
-//     }
-// }
 
 
 app.get('/', (req, res) => {
@@ -37,40 +27,9 @@ app.get('/registracja/uzytkownik', async (req, res) => {
     res.render('strony/uzytkownikReg', { kraje });
 });
 
-app.post('/registracja/uzytkownik', async (req, res) => {
-    const { imie, kraj_id } = req.body
-    let { count } = await db.countUzytkownicy();
-    count = parseInt(count) + 1;
-
-
-    db.insertUzytkownik(count, kraj_id, imie).then(result => {
-        if (result) {
-            console.log('Uzytkownik jest dodany');
-            res.redirect("/")
-        } else {
-            res.send("error")
-        }
-    });
-});
-
 app.get('/registracja/autor', async (req, res) => {
     const kraje  = await db.getKraje();
     res.render('strony/autorReg', { kraje });
-});
-
-app.post('/registracja/autor', async (req, res) => {
-    const { imie, kraj_id, bio } = req.body
-    let { count } = await db.countAutorzy();
-    count = parseInt(count) + 1;
-
-    db.insertAutor(count, kraj_id, imie, bio).then(result => {
-        if (result) {
-            console.log('Uzytkownik jest dodany');
-            res.redirect("/")
-        } else {
-            res.send("error")
-        }
-    });
 });
 
 app.get('/kraje', async (req, res) => {
@@ -81,21 +40,6 @@ app.get('/kraje', async (req, res) => {
 app.get('/gatunki', async (req, res) => {
     const gatunki  = await db.getGatunki();
     res.render('strony/gatunki', { gatunki });
-});
-
-app.post('/gatunki', async (req, res) => {
-    const { nazwa } = req.body
-    let { count } = await db.countGatunki();
-    count = parseInt(count) + 1;
-
-    db.insertGatunek(count, nazwa).then(result => {
-        if (result) {
-            console.log('Gatunek jest dodany');
-            res.redirect('/gatunki');
-        } else {
-            res.send("error")
-        }
-    });
 });
 
 app.get('/autorzy', async (req, res) => {
@@ -109,16 +53,81 @@ app.get('/autorzy/:id', async (req, res) => {
     const kraj = await db.getKrajById(autor.kraj_id);
     const albumy  = await db.getAlbumy(autor.id);
     const liczbaPiesni = await db.getLiczbaPiesni(autor.id);
+    console.log(liczbaPiesni)
     res.render('strony/autorInfo', { autor, kraj, albumy, liczbaPiesni });
 });
 
-app.post('/autorzy/:id', async (req, res) => {
-    const { nazwa, year } = req.body
-    const author_id = parseInt(req.params.id);
-    let { count } = await db.countAlbumy();
-    count = parseInt(count) + 1;
+app.get('/autorzy/:id/:id', async (req, res) => {
+    pg = {};
+    const id = parseInt(req.params.id);
+    const album  = await db.getAlbumById(id);
+    const autor = await db.getAutorById(album.autor_id);
+    const piesni  = await db.getPiesni(album.id);
+    if(piesni.length > 0) {
+        for(p of piesni) {
+            // console.log("app.get('/autorzy/:id/:id'):  p.id :  " + p.id)
+            const tmp = await db.getPiesniGatunki(p.id);
+            // console.log("app.get('/autorzy/:id/:id'):  tmp  : " + tmp)
+            pg[p.id] = tmp;
+        }
+    }
+    const gatunki  = await db.getGatunki();
+    res.render('strony/albumInfo', {autor, album, piesni, gatunki, pg});
+});
 
-    db.insertAlbum(count, author_id, nazwa, year).then(result => {
+
+
+
+
+
+
+
+
+
+app.post('/registracja/uzytkownik', async (req, res) => {
+    const { imie, kraj_id } = req.body
+
+    db.insertUzytkownik(kraj_id, imie).then(result => {
+        if (result) {
+            console.log('Uzytkownik jest dodany');
+            res.redirect("/")
+        } else {
+            res.send("error")
+        }
+    });
+});
+
+app.post('/registracja/autor', async (req, res) => {
+    const { imie, kraj_id, bio } = req.body;
+
+    db.insertAutor(kraj_id, imie, bio).then(result => {
+        if (result) {
+            console.log('Autor jest dodany');
+            res.redirect("/")
+        } else {
+            res.send("error")
+        }
+    });
+});
+
+app.post('/gatunki', async (req, res) => {
+    const { nazwa } = req.body;
+
+    db.insertGatunek(nazwa).then(result => {
+        if (result) {
+            console.log('Gatunek jest dodany');
+            res.redirect('/gatunki');
+        } else {
+            res.send("error")
+        }
+    });
+});
+
+app.post('/autorzy/:id', async (req, res) => {
+    const { nazwa, rok } = req.body
+    const author_id = req.params.id;
+
+    db.insertAlbum(author_id, nazwa, rok).then(result => {
         if (result) {
             console.log('Album jest dodany');
             res.redirect('/autorzy/'+author_id);
@@ -129,49 +138,18 @@ app.post('/autorzy/:id', async (req, res) => {
 
 });
 
-app.get('/autorzy/:id/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const album  = await db.getAlbumById(id);
-    const autor = await db.getAutorById(album.autor_id);
-    const piesni  = await db.getPiesni(album.id);
-    const gatunki  = await db.getGatunki();
-    res.render('strony/albumInfo', {id, autor, album, piesni, gatunki});
-});
 
 app.post('/autorzy/:id/:id', async (req, res) => {
     const { nazwa, gatunek } = req.body;
-
-    // console.log(gatunek.value)
-
-    // var controls = document.getElementsByName(listName);
-    // var label = document.getElementsByName(labelName);
-    // label.value = '';
-    // for(var i=0;i<controls.length;i++){
-    //    label.value += controls[i].value.toString()+',';
-    // }
-
-    // let listaGatunki = '';
-    // for(let i = 0; i < gatunek.length; i++) {
-
-    // }
-
-
-
-
-
-    // var listaGatunki = gatunek.split(',');
-    // console.log(listaGatunki)
-    const album_id = parseInt(req.params.id);
+    const album_id = req.params.id;
     const album  = await db.getAlbumById(album_id);
-    let { count } = await db.countPiesni();
-    count = parseInt(count) + 1;
 
-    db.insertPiesni(count, album_id, nazwa, 0).then(result => {
+    db.insertPiesni(album_id, nazwa, gatunek).then(result => {
         if (result) {
             console.log('Piesn jest dodana');
             res.redirect('/autorzy/'+album.autor_id+"/"+album_id);
         } else {
-            res.send("error")
+            res.redirect('/autorzy/'+album.autor_id+"/"+album_id);
         }
     });
 });

@@ -2,47 +2,167 @@ CREATE SCHEMA projekt;
 SET SEARCH_PATH TO projekt;
 
 -------------------------------------------------------------------------
-
-CREATE TABLE kraje ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
-ALTER TABLE kraje ADD PRIMARY KEY (id);
-ALTER TABLE kraje ALTER COLUMN nazwa SET NOT NULL;
+-- function
 
 
-CREATE TABLE autorzy ( id int, kraj_id int, imie varchar(30), bio varchar(150), utworzono timestamp, zaktualizowano timestamp) ;
-ALTER TABLE autorzy ADD SERIAL PRIMARY KEY (id);
-ALTER TABLE autorzy ALTER COLUMN kraj_id SET NOT NULL;
-ALTER TABLE autorzy ALTER COLUMN imie SET NOT NULL;
-ALTER TABLE autorzy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+CREATE OR REPLACE FUNCTION set_utworzono() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.utworzono = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-------------------------------------------------------------------------
+-- kraje
 
 
-CREATE TABLE uzytkownicy ( id int, kraj_id int, imie varchar(30), utworzono timestamp, zaktualizowano timestamp) ;
-ALTER TABLE uzytkownicy ADD PRIMARY KEY (id);
-ALTER TABLE uzytkownicy ALTER COLUMN kraj_id SET NOT NULL;
-ALTER TABLE uzytkownicy ALTER COLUMN imie SET NOT NULL;
-ALTER TABLE uzytkownicy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+CREATE TABLE kraje (nazwa varchar(30) NOT NULL, utworzono timestamp) ;  
+ALTER TABLE kraje ADD COLUMN id SERIAL PRIMARY KEY;
 
-
-CREATE TABLE gatunki ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
-ALTER TABLE gatunki ADD PRIMARY KEY (id);
-
-
-CREATE TABLE albumy ( id int, autor_id int, nazwa varchar(30), rok int, utworzono timestamp, zaktualizowano timestamp) ;
-ALTER TABLE albumy ADD PRIMARY KEY (id);
-ALTER TABLE albumy ADD FOREIGN KEY (autor_id) REFERENCES autorzy (id);
-
-
-CREATE TABLE piesni ( id int, album_id int, nazwa varchar(30), ranking int, utworzono timestamp, zaktualizowano timestamp) ;
-ALTER TABLE piesni ADD PRIMARY KEY (id);
-ALTER TABLE piesni ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
-
+CREATE TRIGGER set_utworzono_on_insert_kraje
+BEFORE INSERT ON kraje
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
 
 /// adding values to kraje table ///
+
+
+-------------------------------------------------------------------------
+-- autorzy 
+
+
+CREATE TABLE autorzy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, bio varchar(150), utworzono timestamp) ;
+ALTER TABLE autorzy ADD COLUMN id SERIAL PRIMARY KEY;
+ALTER TABLE autorzy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+
+CREATE TRIGGER set_utworzono_on_insert_autorzy
+BEFORE INSERT ON autorzy
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
+
+-------------------------------------------------------------------------
+-- uzytkownicy
+
+
+CREATE TABLE uzytkownicy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, utworzono timestamp) ;
+ALTER TABLE uzytkownicy ADD COLUMN id SERIAL PRIMARY KEY;
+ALTER TABLE uzytkownicy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
+
+CREATE TRIGGER set_utworzono_on_insert_uzytkownicy
+BEFORE INSERT ON uzytkownicy
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
+
+-------------------------------------------------------------------------
+-- gatunki
+
+
+CREATE TABLE gatunki (nazwa varchar(30) NOT NULL, utworzono timestamp) ;  
+ALTER TABLE gatunki ADD COLUMN id SERIAL PRIMARY KEY;
+
+CREATE TRIGGER set_utworzono_on_insert_gatunki
+BEFORE INSERT ON gatunki
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
+
 /// adding values to gatunki table ///
 
+-------------------------------------------------------------------------
+-- albumy
 
-CREATE TABLE piesni_gatunki ( id int, piesn_id int, gatunek_id int) ;  
+
+CREATE TABLE albumy (autor_id int NOT NULL, nazwa varchar(30) NOT NULL, rok int NOT NULL, utworzono timestamp) ;
+ALTER TABLE albumy ADD COLUMN id SERIAL PRIMARY KEY;
+ALTER TABLE albumy ADD FOREIGN KEY (autor_id) REFERENCES autorzy (id);
+
+CREATE TRIGGER set_utworzono_on_insert_albumy
+BEFORE INSERT ON albumy
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
+
+-------------------------------------------------------------------------
+-- piesni
+
+
+CREATE TABLE piesni (album_id int NOT NULL, nazwa varchar(30) NOT NULL, ranking int NOT NULL, utworzono timestamp) ;
+ALTER TABLE piesni ADD COLUMN id SERIAL PRIMARY KEY;
+ALTER TABLE piesni ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
+
+CREATE TRIGGER set_utworzono_on_insert_piesni
+BEFORE INSERT ON piesni
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
+
+-------------------------------------------------------------------------
+-- widok
+
+
+CREATE VIEW liczba_piesni_widok AS
+SELECT albumy.autor_id as autor_id, count(*) as count
+FROM piesni
+inner join albumy on albumy.id = piesni.album_id
+group by albumy.autor_id;
+
+-------------------------------------------------------------------------
+-- piesni_gatunki
+
+
+CREATE TABLE piesni_gatunki ( piesn_id int NOT NULL, gatunek_id int NOT NULL) ;  
+ALTER TABLE piesni_gatunki ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE piesni_gatunki ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
 ALTER TABLE piesni_gatunki ADD FOREIGN KEY (gatunek_id) REFERENCES gatunki (id);
+
+-------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -77,58 +197,9 @@ ALTER TABLE autorzy_albumy ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
 
 
 
--------------------------------------------------------------------------
-Views
-
-
-CREATE VIEW liczba_piesni_widok AS
-  SELECT albumy.autor_id as autor_id, count(*) as count
-  FROM piesni
-  inner join albumy on albumy.id = piesni.album_id
-  group by albumy.autor_id
 
 
 
----------------------------------------------------------------------------
-
-
-Data validation
-
-- constraints
-
-
-
-Triggers
-
-CREATE OR REPLACE FUNCTION set_utworzono() RETURNS TRIGGER AS $$
-BEGIN
-    NEW.utworzono = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER set_utworzono_on_insert
-    BEFORE INSERT ON piesni
-    FOR EACH ROW
-    EXECUTE PROCEDURE set_utworzono();
-
-
-
-
-CREATE OR REPLACE FUNCTION set_created_at() RETURNS TRIGGER AS $$
-BEGIN
-    NEW.utworzono = NOW();
-    EXECUTE format('UPDATE %I SET utworzono = NOW() WHERE id = %L',TG_TABLE_NAME,NEW.id);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER set_created_at_on_insert
-    BEFORE INSERT ON ALL TABLES
-    FOR EACH STATEMENT
-    EXECUTE FUNCTION set_created_at();
 
 
 

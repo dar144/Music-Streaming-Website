@@ -10,32 +10,51 @@
     <h1><%=album.nazwa%></h1>
     <ul>
         <li><b>Autor </b><%=autor.imie%></li>
-        <li><b>Rok </b><%=album.year%></li>
+        <li><b>Rok </b><%=album.rok%></li>
         <li>
             <b>Pieśni</b>
-            <ul>
-                <% for(let p of piesni) { %>
-                    <li>
-                        <%=p.nazwa%>
-                    </li>
-                <% }%>
-            </ul>
+            <%if(piesni.length == 0) { %>
+                <ul>
+                    <li> "<%=album.nazwa%>" nie ma żadnych pieśni</li>
+                </ul>
+            <% } else {%>
+                <ul>
+                    <% for(let p of piesni) { %>
+                        <li>
+                            <b><%=p.nazwa%></b> (
+                                    <%for(let i = 0; i < Object.keys(pg[p.id]).length; i++) {%>
+                                        <%=pg[p.id][i].nazwa%> / 
+                                    <%}%>)
+                        </li>
+                    <% }%>
+                </ul>
+            <% }%>
         </li>
     </ul>
-    <h2>Dodaj pieśnię</h2>
-    <form action="/autorzy/<%=autor.id%>/<%=album.id%>" method="POST">
-        <div>
-            <label for="nazwa">Nazwa </label>
-            <input type="text" name="nazwa" required>
-        </div>
-        <% for(let g of gatunki) { %>
-            <div>
-                <input type="checkbox" name="gatunek" value="<%=g.nazwa%>">
-                <label for="gatunek"><%=g.nazwa%></label>
+
+    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+        <h2>Dodaj pieśnię</h2>
+        <form action="/autorzy/<%=autor.id%>/<%=album.id%>" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label for="nazwa">Nazwa </label>
+                <input type="text" name="nazwa" required>
             </div>
-        <% }%>
-        <button>zapisz</button>
-    </form>
-    <a href="/autorzy/<%=autor.id%>">lista albomów</a>
+            <div class="checkbox-group required">
+                <label for="gatunek">Gatunki (proszę wybrać co najmniej jeden)</label>
+                <% for(let g of gatunki) { %>
+                    <div >
+                        <input type="checkbox" name="gatunek" value="<%=g.id%>">
+                        <label for="gatunek"><%=g.nazwa%></label>
+                    </div>
+                <% }%>
+            </div>
+            <div style="margin: 15px 0px;">
+                <button>zapisz</button>
+            </div>
+        </form>
+    </div>
+    <div style="margin-top: 20px">
+        <a href="/autorzy/<%=autor.id%>">Wróć do listy albomów</a>
+    </div>
 </body>
 </html>

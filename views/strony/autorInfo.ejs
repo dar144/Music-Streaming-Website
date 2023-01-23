@@ -16,26 +16,45 @@
             <b>Bio </b><%=autor.bio%>
         </li>
         <li>
-            <b>Albumy</b>
-            <ul>
-                <% for(let a of albumy) { %>
-                    <li>
-                        <a href="/autorzy/<%=autor.id%>/<%=a.id%>"><b><%=a.nazwa%></b></a> (<%=a.year%>)
-                    </li>
-                <% }%>
-            </ul>
-        </li>
-        <li>
             <b>Liczba pieśni </b><%=liczbaPiesni || 0%>
         </li>
-    </ul>
-    <h2>Dodaj album</h2>
-    <form action="/autorzy/<%=autor.id%>" method="POST">
-        <input type="text" name="nazwa" required>
-        <input type="number" name="year" min="1700" max="2023" value="2023" required>
-        <button>zapisz</button>
-    </form>
-    <a href="/autorzy">lista autorów</a>
+        <li>
+            <b>Albumy</b>
+            <%if(albumy.length == 0) { %>
+                <ul>
+                    <li><%=autor.imie%> nie ma żadnych albumów</li>
+                </ul>
+            <% } else {%>
+                <ul>
+                    <% for(let a of albumy) { %>
+                        <li>
+                            <a href="/autorzy/<%=autor.id%>/<%=a.id%>"><b><%=a.nazwa%></b></a> (<%=a.rok%>) 
+                        </li>
+                    <% }%>
+                </ul>
+            <% }%>
+        </li>
 
+    </ul>
+    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+        <h2>Dodaj album</h2>
+        <form action="/autorzy/<%=autor.id%>" method="POST">
+            <div>
+                <label for="nazwa">Nazwa</label>
+                <input type="text" name="nazwa" required>
+            </div>
+            <div>
+                <label for="rok">Rok</label>
+                <input type="number" name="rok" min="1700" max="2023" value="2023" required>
+            </div>
+            <div style="margin: 15px 0px;">
+                <button>zapisz</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/autorzy"> Wróć do listy autorów</a>
+    </div>
 </body>
 </html>
