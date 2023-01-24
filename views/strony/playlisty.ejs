@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlisty</title>
+</head>
+<body>
+    <h1>Playlisty</h1>
+
+    <%if(playlisty.length == 0) { %>
+        <ul>
+            <li>Nie ma żadnych playlist</li>
+        </ul>
+    <% } else {%>
+        <ul>
+            <% for(let p of playlisty) { %>
+                <li>
+                    <a href="/playlisty/<%=p.id%>"><b> <%=p.nazwa%></b></a> (<%=p.imie%>)
+                </li>
+            <% }%>
+        </ul>
+    <% }%>
+
+
+    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+        <h2>Dodaj playlistę</h2>
+        <form action="/playlisty" method="POST">
+            <div>
+                <label for="nazwa">Nazwa</label>
+                <input type="text" name="nazwa" required>
+            </div>
+            <div>
+                <label for="uzytkownik_id">Uzytkownik:</label>
+                <select name="uzytkownik_id" required>
+                    <option value="" selected disabled hidden>wybierz uzytkownika</option>
+                    <% for(let u of uzytkownicy) { %>
+                        <option value="<%=u.id%>">
+                            <%=u.imie%>
+                        </option>
+                        <% }%>
+                </select>
+            </div>
+            <div style="margin: 15px 0px;">
+                <button>zapisz</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/">Wróć do strony głównej</a>
+    </div>
+
+</body>
+</html>

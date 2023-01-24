@@ -1,43 +1,24 @@
+const { fromByteArray } = require('ipaddr.js');
 const { Pool } = require('pg');
+const { uptime } = require('process');
 
 const pool = new Pool({
     user: 'u0haidukevich',
-    // database: 'u0haidukevich',
     database: process.env.DATABASE_NAME,
-    // password: '0haidukevich',
     password: process.env.DATABASE_PASSWORD,
-    // port: 5432,
     port: process.env.DATABASE_PORT
 })
 
 
-
-
-// const updateUser = async (nazwisko, imie, id) => {
-//     try {
-//         await pool.query(
-//             `UPDATE lab04.uczestnik SET nazwisko = $1, imie = $2 WHERE id_uczestnik = $3`,
-//             [nazwisko, imie, id]);
-//         return true;
-//     } catch (error) {
-//         console.error(error.stack);
-//         return false;
-//     } 
-// }
-
-// const deleteUser = async (id) => {
-//     try {
-//         // await pool.query(`DELETE FROM lab04.uczest_kurs WHERE id_uczest = $1;
-//         // DELETE FROM lab04.uczestnik WHERE id_uczestnik = $1;`, [id]);
-//         await pool.query(`DELETE FROM lab04.uczest_kurs WHERE id_uczest = $1;`, [id]);
-//         await pool.query(`DELETE FROM lab04.uczest_zaj WHERE id_uczest = $1;`, [id]);
-//         await pool.query(`DELETE FROM lab04.uczestnik WHERE id_uczestnik = $1;`, [id]);
-//         return true;
-//     } catch (error) {
-//         console.error(error.stack);
-//         return false;
-//     } 
-// }
+const getPlaylisty = async () => {
+    try {
+        const playlisty = await pool.query('SELECT * FROM projekt.playlist_imie_widok');
+        return playlisty.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+};
 
 const getKraje = async () => {
     try {
@@ -68,6 +49,29 @@ const getAutorzy = async () => {
         return null;
     }
 };
+
+const getUzytkownicy = async () => {
+    try {
+        const uzytkownicy = await pool.query('SELECT * FROM projekt.uzytkownicy ORDER BY id');
+        return uzytkownicy.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+};
+
+const getSubByPlaylistId = async (id) => {
+    try {
+        const sub = await pool.query(`SELECT u.id, u.imie FROM projekt.uzytkownicy u
+                                      JOIN projekt.uzytkownicy_playlisty up ON up.uzytkownik_id = u.id
+                                      WHERE playlista_id = $1
+                                      AND rola = 'sluchacz';`, [id]);
+        return sub.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+}; 
 
 const getAlbumy = async (id) => {
     try {
@@ -118,6 +122,18 @@ const insertUzytkownik = async (kraj_id, imie) => {
         await pool.query(
             `INSERT INTO projekt.uzytkownicy ("kraj_id", "imie")  
              VALUES ($1, $2)`, [kraj_id, imie]);
+        return true;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+const insertSub = async (sub_id, playlista_id) => {
+    try {
+        await pool.query(
+            `INSERT INTO projekt.uzytkownicy_playlisty ("uzytkownik_id", "playlista_id", "rola")  
+             VALUES ($1, $2, 'sluchacz')`, [sub_id, playlista_id]);
         return true;
     } catch (error) {
         console.error(error.stack);
@@ -192,6 +208,39 @@ const getAlbumById = async (id) => {
     }
 };
 
+const getPlaylistaById = async (id) => {
+    try {
+        const playlista = await pool.query(`SELECT * FROM projekt.playlist_imie_widok WHERE id = $1`, [id]);
+        return playlista.rows[0];
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+};
+
+
+
+
+
+const getUzytkownicySub = async (id) => {
+    try {
+        const uzytkownicySub = await pool.query(
+            `SELECT u.id, u.imie
+             FROM projekt.uzytkownicy u LEFT JOIN projekt.uzytkownicy_playlisty up ON u.id = up.uzytkownik_id 
+             WHERE up.uzytkownik_id  is null 
+             UNION
+             SELECT u.id, u.imie FROM projekt.uzytkownicy u 
+             FULL OUTER JOIN projekt.uzytkownicy_playlisty up ON u.id = up.uzytkownik_id
+             WHERE playlista_id != $1
+             and uzytkownik_id != (SELECT uzytkownik_id FROM projekt.uzytkownicy_playlisty
+             WHERE playlista_id = $1 AND rola='tworca')`, [id]);
+        return uzytkownicySub.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+};
+
 const insertPiesni = async (album_id, nazwa, gatunek) => {
     try {
         const piesn = await pool.query(`SELECT * FROM projekt.piesni WHERE album_id = $1 AND nazwa = $2`, [album_id, nazwa]);
@@ -222,6 +271,28 @@ const insertPiesni = async (album_id, nazwa, gatunek) => {
 };
 
 
+const insertPlaylist = async (nazwa, uzytkownik_id) => {
+    try {
+        const playlista = await pool.query(`SELECT * FROM projekt.playlisty WHERE nazwa = $1`, [nazwa]);
+        
+        if(playlista.rowCount == 0) {
+            const playlista_id = await pool.query(
+            `INSERT INTO projekt.playlisty ("nazwa")  
+                VALUES ($1) RETURNING id;`, [nazwa]);
+
+            await pool.query(`INSERT INTO projekt.uzytkownicy_playlisty ("uzytkownik_id", "playlista_id", "rola")  
+                VALUES ($1, $2, $3)`, [parseInt(uzytkownik_id), playlista_id.rows[0]?.id, 'tworca']); 
+
+        } else {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
 
 
 
@@ -234,14 +305,21 @@ module.exports = {
     getAutorzy,
     getAlbumy,
     getPiesni,
+    getPlaylisty,
+    getUzytkownicy,
     getPiesniGatunki,
+    getUzytkownicySub,
+    getSubByPlaylistId,
     insertUzytkownik,
     insertAutor,
     insertGatunek,
     insertAlbum,
     insertPiesni,
+    insertPlaylist,
+    insertSub,
     getAutorById,
     getKrajById,
     getAlbumById,
+    getPlaylistaById,
     getLiczbaPiesni
 }

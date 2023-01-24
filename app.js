@@ -65,9 +65,7 @@ app.get('/autorzy/:id/:id', async (req, res) => {
     const piesni  = await db.getPiesni(album.id);
     if(piesni.length > 0) {
         for(p of piesni) {
-            // console.log("app.get('/autorzy/:id/:id'):  p.id :  " + p.id)
             const tmp = await db.getPiesniGatunki(p.id);
-            // console.log("app.get('/autorzy/:id/:id'):  tmp  : " + tmp)
             pg[p.id] = tmp;
         }
     }
@@ -75,10 +73,21 @@ app.get('/autorzy/:id/:id', async (req, res) => {
     res.render('strony/albumInfo', {autor, album, piesni, gatunki, pg});
 });
 
+app.get('/playlisty', async (req, res) => {
+    console.log("d")
+    const playlisty  = await db.getPlaylisty();
+    console.log(playlisty)
+    const uzytkownicy  = await db.getUzytkownicy();
+    res.render('strony/playlisty', { uzytkownicy, playlisty });
+});
 
-
-
-
+app.get('/playlisty/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const playlista  = await db.getPlaylistaById(id);
+    const uzytkownicySub  = await db.getUzytkownicySub(id);
+    const subs  = await db.getSubByPlaylistId(id);
+    res.render('strony/playlistInfo', { playlista, uzytkownicySub, subs });
+});
 
 
 
@@ -92,7 +101,7 @@ app.post('/registracja/uzytkownik', async (req, res) => {
             console.log('Uzytkownik jest dodany');
             res.redirect("/")
         } else {
-            res.send("error")
+            res.redirect("/")
         }
     });
 });
@@ -105,7 +114,7 @@ app.post('/registracja/autor', async (req, res) => {
             console.log('Autor jest dodany');
             res.redirect("/")
         } else {
-            res.send("error")
+            res.redirect("/")
         }
     });
 });
@@ -118,7 +127,7 @@ app.post('/gatunki', async (req, res) => {
             console.log('Gatunek jest dodany');
             res.redirect('/gatunki');
         } else {
-            res.send("error")
+            res.redirect('/gatunki');
         }
     });
 });
@@ -132,12 +141,11 @@ app.post('/autorzy/:id', async (req, res) => {
             console.log('Album jest dodany');
             res.redirect('/autorzy/'+author_id);
         } else {
-            res.send("error")
+            res.redirect('/autorzy/'+author_id);
         }
     });
 
 });
-
 
 app.post('/autorzy/:id/:id', async (req, res) => {
     const { nazwa, gatunek } = req.body;
@@ -154,6 +162,33 @@ app.post('/autorzy/:id/:id', async (req, res) => {
     });
 });
 
+app.post('/playlisty', async (req, res) => {
+    const { nazwa, uzytkownik_id } = req.body;
+
+    db.insertPlaylist(nazwa, uzytkownik_id).then(result => {
+        if (result) {
+            console.log('Playlist jest dodany');
+            res.redirect('/playlisty');
+        } else {
+            res.redirect('/playlisty');
+        }
+    });
+    
+});
+
+app.post('/playlisty/:id', async (req, res) => {
+    const { sub_id } = req.body;
+    const playlista_id = req.params.id;
+
+    db.insertSub(sub_id, playlista_id).then(result => {
+        if (result) {
+            console.log('Subscriber jest dodany');
+            res.redirect('/playlisty/'+playlista_id);
+        } else {
+            res.redirect('/playlisty'+playlista_id);
+        }
+    });
+});
 
 
 

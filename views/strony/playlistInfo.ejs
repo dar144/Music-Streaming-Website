@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=playlista.nazwa%></title>
+</head>
+<body>
+    <h1><%=playlista.nazwa%></h1>
+    <ul>
+        <li><b>Autor</b> <%=playlista.imie%></li>
+        <li>
+            <b>Uzytkownicy, którzy subskrybuja tą playlistę</b>
+            <%if(subs.length==0) {%>
+                <ul> <li> </li> </ul>
+            <% } else {%>
+                <ul>
+                <% for(let sub of subs) { %>
+                    <li><%=sub.imie%></li>
+                <% }%>
+                </ul>
+            <%}%>                   
+        </li>
+    </ul>
+
+    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+        <h2>Dodaj pieśnię</h2>
+    </div>
+
+    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px; margin-top: 30px;">
+        <h2>Dodaj uzytkownika (subscriber'a)</h2>
+        <form action="/playlisty/<%=playlista.id%>" method="POST">
+            <div>
+                <label for="sub_id">Uzytkownik:</label>
+                <select name="sub_id" required>
+                    <option value="" selected disabled hidden>wybierz uzytkownika</option>
+                    <% for(let s of uzytkownicySub) { %>
+                        <option value="<%=s.id%>">
+                            <%=s.imie%>
+                        </option>
+                    <% }%>
+                </select>
+            </div>
+            <div style="margin: 15px 0px;">
+                <button>Zapisz</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/">Wróć do strony głównej</a>
+    </div>
+</body>
+</html>

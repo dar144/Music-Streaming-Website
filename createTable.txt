@@ -113,96 +113,44 @@ ALTER TABLE piesni_gatunki ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
 ALTER TABLE piesni_gatunki ADD FOREIGN KEY (gatunek_id) REFERENCES gatunki (id);
 
 -------------------------------------------------------------------------
+-- playlisty
 
 
+CREATE TABLE playlisty (nazwa varchar(30) NOT NULL, utworzono timestamp) ; 
+ALTER TABLE playlisty ADD COLUMN id SERIAL PRIMARY KEY; 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-CREATE TABLE playlisty ( id int, nazwa varchar(30), utworzono timestamp, zaktualizowano timestamp) ;  
-ALTER TABLE playlisty ADD PRIMARY KEY (id);
-
-
-
+CREATE TRIGGER set_utworzono_on_insert_playlisty
+BEFORE INSERT ON playlisty
+FOR EACH ROW
+EXECUTE PROCEDURE set_utworzono();
 
 -------------------------------------------------------------------------
+-- uzytkownicy_playlisty
+
 
 CREATE TYPE role_enum AS ENUM ('tworca', 'sluchacz');
-CREATE TABLE uzytkownicy_playlisty ( id int, uzytkownik_id int, playlista_id int, rola ROLE_ENUM) ;  
+CREATE TABLE uzytkownicy_playlisty ( uzytkownik_id int NOT NULL, playlista_id int NOT NULL, rola ROLE_ENUM) ;
+ALTER TABLE uzytkownicy_playlisty ADD COLUMN id SERIAL PRIMARY KEY; 
 ALTER TABLE uzytkownicy_playlisty ADD FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy (id);
 ALTER TABLE uzytkownicy_playlisty ADD FOREIGN KEY (playlista_id) REFERENCES playlisty (id);
 
+-------------------------------------------------------------------------
+-- playlisty_piesni
 
-CREATE TABLE playlisty_piesni ( id int, playlista_id int, piesn_id int) ;  
+
+CREATE TABLE playlisty_piesni ( playlista_id int NOT NULL, piesn_id int NOT NULL) ;  
+ALTER TABLE uzytkownicy_playlisty ADD COLUMN id SERIAL PRIMARY KEY; 
 ALTER TABLE playlisty_piesni ADD FOREIGN KEY (playlista_id) REFERENCES playlisty (id);
 ALTER TABLE playlisty_piesni ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
 
+-------------------------------------------------------------------------
+-- playlist_imie_widok
 
 
-
-
-CREATE TABLE autorzy_albumy ( id int, autor_id int, album_id int) ;  
-ALTER TABLE autorzy_albumy ADD FOREIGN KEY (autor_id) REFERENCES autorzy (id);
-ALTER TABLE autorzy_albumy ADD FOREIGN KEY (album_id) REFERENCES albumy (id);
-
-
-
-
-
-
-
-
-
-
-
+CREATE VIEW playlist_imie_widok AS
+SELECT playlisty.id, playlisty.nazwa, uzytkownicy.imie FROM playlisty
+JOIN uzytkownicy_playlisty ON playlisty.id = uzytkownicy_playlisty.playlista_id
+JOIN uzytkownicy ON uzytkownicy.id = uzytkownicy_playlisty.uzytkownik_id
+WHERE rola = 'tworca';
 
 
