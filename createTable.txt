@@ -143,6 +143,8 @@ ALTER TABLE uzytkownicy_playlisty ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE playlisty_piesni ADD FOREIGN KEY (playlista_id) REFERENCES playlisty (id);
 ALTER TABLE playlisty_piesni ADD FOREIGN KEY (piesn_id) REFERENCES piesni (id);
 
+
+
 -------------------------------------------------------------------------
 -- playlist_imie_widok
 
@@ -152,5 +154,33 @@ SELECT playlisty.id, playlisty.nazwa, uzytkownicy.imie FROM playlisty
 JOIN uzytkownicy_playlisty ON playlisty.id = uzytkownicy_playlisty.playlista_id
 JOIN uzytkownicy ON uzytkownicy.id = uzytkownicy_playlisty.uzytkownik_id
 WHERE rola = 'tworca';
+
+-------------------------------------------------------------------------
+-- autor_piesn_widok
+
+
+CREATE VIEW autor_piesn_widok AS
+SELECT autorzy.id as autor_id, autorzy.imie, piesni.id as piesn_id, piesni.nazwa
+FROM piesni
+JOIN albumy ON piesni.album_id = albumy.id
+JOIN autorzy ON albumy.autor_id = autorzy.id
+
+
+
+SELECT apw.imie, apw.nazwa FROM projekt.playlisty_piesni pp
+JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = pp.piesn_id
+WHERE playlista_id = 7;
+
+
+SELECT * FROM projekt.piesni p
+JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = pp.piesn_id
+WHERE NOT EXISTS 
+( SELECT * FROM projekt.playlisty_piesni pp WHERE p.id = pp.piesn_id AND playlista_id = 8)
+
+
+SELECT p.id, p.nazwa, apw.imie FROM projekt.piesni p
+JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = p.id
+WHERE NOT EXISTS 
+( SELECT * FROM projekt.playlisty_piesni pp WHERE p.id = pp.piesn_id AND playlista_id = 7)
 
 

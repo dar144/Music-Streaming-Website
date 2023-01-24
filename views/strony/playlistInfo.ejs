@@ -22,10 +22,35 @@
                 </ul>
             <%}%>                   
         </li>
+        <li>
+            <b>Piesnie</b>
+            <%if(songsD.length==0) {%>
+                <ul> <li> </li> </ul>
+            <% } else {%>
+                <ul>
+                <% for(let s of songsD) { %>
+                    <li><%=s.nazwa%>  (<%=s.imie%>)</li>
+                <% }%>
+                </ul>
+            <%}%>                   
+        </li>
     </ul>
 
     <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
         <h2>Dodaj pieśnię</h2>
+        <form action="/playlisty/<%=playlista.id%>/piesni" method="POST">
+            <div>
+                <%for(p of piesniDD){%>
+                <div>
+                    <input type="radio" name="piesn_id" value="<%=p.id%>">
+                    <label for="piesn_id"><%=p.nazwa%> (<%=p.imie%>)</label>
+                </div>
+                <%}%>
+            </div>
+            <div style="margin: 15px 0px;">
+                <button>Zapisz</button>
+            </div>
+        </form>
     </div>
 
     <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px; margin-top: 30px;">
@@ -49,7 +74,7 @@
     </div>
 
     <div style="margin-top: 30px;">
-        <a href="/">Wróć do strony głównej</a>
+        <a href="/playlisty">Wróć do listy playlisty</a>
     </div>
 </body>
 </html>

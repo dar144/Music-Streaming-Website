@@ -17,8 +17,8 @@
         </div>
         <div>
             <label for="kraj_id">Kraj:</label>
-            <option value="" selected disabled hidden>wybierz kraj</option>
             <select name="kraj_id" required>
+                <option value="" selected disabled hidden>wybierz kraj</option>
                 <% for(let k of kraje) { %>
                     <option value="<%=k.id%>">
                         <%=k.nazwa%>

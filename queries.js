@@ -218,22 +218,27 @@ const getPlaylistaById = async (id) => {
     }
 };
 
-
+const getPiesniDoDodawania = async (id) => {
+    try {
+        const playlista = await pool.query(`SELECT p.id, p.nazwa, apw.imie FROM projekt.piesni p
+        JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = p.id
+        WHERE NOT EXISTS 
+        ( SELECT * FROM projekt.playlisty_piesni pp WHERE p.id = pp.piesn_id AND playlista_id = $1)`, [id]);
+        return playlista.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return null;
+    }
+};
 
 
 
 const getUzytkownicySub = async (id) => {
     try {
         const uzytkownicySub = await pool.query(
-            `SELECT u.id, u.imie
-             FROM projekt.uzytkownicy u LEFT JOIN projekt.uzytkownicy_playlisty up ON u.id = up.uzytkownik_id 
-             WHERE up.uzytkownik_id  is null 
-             UNION
-             SELECT u.id, u.imie FROM projekt.uzytkownicy u 
-             FULL OUTER JOIN projekt.uzytkownicy_playlisty up ON u.id = up.uzytkownik_id
-             WHERE playlista_id != $1
-             and uzytkownik_id != (SELECT uzytkownik_id FROM projekt.uzytkownicy_playlisty
-             WHERE playlista_id = $1 AND rola='tworca')`, [id]);
+            `SELECT * FROM projekt.uzytkownicy u
+             WHERE NOT EXISTS 
+             ( SELECT * FROM projekt.uzytkownicy_playlisty up WHERE u.id = up.uzytkownik_id AND playlista_id = $1 ) ;`, [id]);
         return uzytkownicySub.rows;
     } catch (error) {
         console.error(error.stack);
@@ -294,8 +299,29 @@ const insertPlaylist = async (nazwa, uzytkownik_id) => {
     }
 };
 
+const insertPiesnToPlaylista = async (piesn_id, playlista_id) => {
+    try {
+        await pool.query(`INSERT INTO projekt.playlisty_piesni ("playlista_id", "piesn_id")  
+        VALUES ($1, $2)`, [parseInt(playlista_id), parseInt(piesn_id)]); 
+        return true;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
 
 
+const getPiesniDodane = async (id) => {
+    try {
+        const piesni = await pool.query(`SELECT apw.imie, apw.nazwa FROM projekt.playlisty_piesni pp
+        JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = pp.piesn_id
+        WHERE playlista_id = $1;`, [id]); 
+        return piesni.rows;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
 
 
 
@@ -305,6 +331,8 @@ module.exports = {
     getAutorzy,
     getAlbumy,
     getPiesni,
+    getPiesniDodane,
+    getPiesniDoDodawania,
     getPlaylisty,
     getUzytkownicy,
     getPiesniGatunki,
@@ -317,6 +345,7 @@ module.exports = {
     insertPiesni,
     insertPlaylist,
     insertSub,
+    insertPiesnToPlaylista,
     getAutorById,
     getKrajById,
     getAlbumById,

@@ -74,19 +74,22 @@ app.get('/autorzy/:id/:id', async (req, res) => {
 });
 
 app.get('/playlisty', async (req, res) => {
-    console.log("d")
     const playlisty  = await db.getPlaylisty();
-    console.log(playlisty)
     const uzytkownicy  = await db.getUzytkownicy();
     res.render('strony/playlisty', { uzytkownicy, playlisty });
 });
 
 app.get('/playlisty/:id', async (req, res) => {
     const id = parseInt(req.params.id);
-    const playlista  = await db.getPlaylistaById(id);
+    const playlista = await db.getPlaylistaById(id);
+    const piesniDD = await db.getPiesniDoDodawania(id);
+    const songsD = await db.getPiesniDodane(id);
     const uzytkownicySub  = await db.getUzytkownicySub(id);
     const subs  = await db.getSubByPlaylistId(id);
-    res.render('strony/playlistInfo', { playlista, uzytkownicySub, subs });
+
+
+
+    res.render('strony/playlistInfo', { playlista, uzytkownicySub, subs, piesniDD, songsD });
 });
 
 
@@ -190,6 +193,19 @@ app.post('/playlisty/:id', async (req, res) => {
     });
 });
 
+app.post('/playlisty/:id/piesni', async (req, res) => {
+    const { piesn_id } = req.body;
+    const playlista_id = req.params.id;
+
+    db.insertPiesnToPlaylista(piesn_id, playlista_id).then(result => {
+        if (result) {
+            console.log('Piesn jest dodana do playlisty');
+            res.redirect('/playlisty/'+playlista_id);
+        } else {
+            res.redirect('/playlisty'+playlista_id);
+        }
+    });
+});
 
 
 app.listen(18082, () => {
