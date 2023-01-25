@@ -9,11 +9,25 @@
 <body>
     <h1>Strona główna</h1>
     <ul>
-        <li><a href="/registracja">Zarejestruj się</a></li>
-        <li><a href="/kraje">Pokaż kraje</a></li>
-        <li><a href="/gatunki">Pokaż albo dodaj gatunki</a></li>
-        <li><a href="/autorzy">Pokaż albo dodaj autorów</a></li>
-        <li><a href="/playlisty">Pokaż  albo dodaj  playlisty</a></li>
+        <%if(!currentUser) {%>
+            <div style="margin-top: 20px;">
+                <li><a href="/registracja">Zarejestruj się</a></li>
+                <li><a href="/logowanie">Zaloguj się</a></li>
+            </div>
+        <%}%>
+
+        <%if(currentUser) {%>
+            <div style="margin-top: 20px;">
+                <li><a href="/wylogowanie">Wyloguj się</a></li>
+            </div>
+        <%}%>
+
+        <div style="margin-top: 20px;">
+            <li><a href="/kraje">Pokaż kraje</a></li>
+            <li><a href="/gatunki">Pokaż albo dodaj gatunki</a></li>
+            <li><a href="/autorzy">Pokaż albo dodaj autorów</a></li>
+            <li><a href="/playlisty">Pokaż  albo dodaj  playlisty</a></li> 
+        </div>
     </ul>
 </body>
 </html>

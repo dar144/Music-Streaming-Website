@@ -31,7 +31,7 @@ EXECUTE PROCEDURE set_utworzono();
 -- autorzy 
 
 
-CREATE TABLE autorzy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, bio varchar(150), utworzono timestamp) ;
+CREATE TABLE autorzy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, session_id varchar(30) NOT NULL, bio varchar(150), haslo varchar(60) NOT NULL, utworzono timestamp) ;
 ALTER TABLE autorzy ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE autorzy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
 
@@ -44,7 +44,7 @@ EXECUTE PROCEDURE set_utworzono();
 -- uzytkownicy
 
 
-CREATE TABLE uzytkownicy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, utworzono timestamp) ;
+CREATE TABLE uzytkownicy (kraj_id int NOT NULL, imie varchar(30) NOT NULL, session_id varchar(30) NOT NULL, haslo varchar(60) NOT NULL, utworzono timestamp) ;
 ALTER TABLE uzytkownicy ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE uzytkownicy ADD FOREIGN KEY (kraj_id) REFERENCES kraje (id);
 
@@ -163,24 +163,5 @@ CREATE VIEW autor_piesn_widok AS
 SELECT autorzy.id as autor_id, autorzy.imie, piesni.id as piesn_id, piesni.nazwa
 FROM piesni
 JOIN albumy ON piesni.album_id = albumy.id
-JOIN autorzy ON albumy.autor_id = autorzy.id
-
-
-
-SELECT apw.imie, apw.nazwa FROM projekt.playlisty_piesni pp
-JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = pp.piesn_id
-WHERE playlista_id = 7;
-
-
-SELECT * FROM projekt.piesni p
-JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = pp.piesn_id
-WHERE NOT EXISTS 
-( SELECT * FROM projekt.playlisty_piesni pp WHERE p.id = pp.piesn_id AND playlista_id = 8)
-
-
-SELECT p.id, p.nazwa, apw.imie FROM projekt.piesni p
-JOIN projekt.autor_piesn_widok apw ON apw.piesn_id = p.id
-WHERE NOT EXISTS 
-( SELECT * FROM projekt.playlisty_piesni pp WHERE p.id = pp.piesn_id AND playlista_id = 7)
-
+JOIN autorzy ON albumy.autor_id = autorzy.id;
 

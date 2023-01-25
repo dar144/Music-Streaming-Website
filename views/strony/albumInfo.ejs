@@ -31,28 +31,29 @@
             <% }%>
         </li>
     </ul>
-
-    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
-        <h2>Dodaj pieśnię</h2>
-        <form action="/autorzy/<%=autor.id%>/<%=album.id%>" method="POST">
-            <div style="margin-bottom: 15px;">
-                <label for="nazwa">Nazwa </label>
-                <input type="text" name="nazwa" required>
-            </div>
-            <div class="checkbox-group required">
-                <label for="gatunek">Gatunki (proszę wybrać co najmniej jeden)</label>
-                <% for(let g of gatunki) { %>
-                    <div >
-                        <input type="checkbox" name="gatunek" value="<%=g.id%>">
-                        <label for="gatunek"><%=g.nazwa%></label>
-                    </div>
-                <% }%>
-            </div>
-            <div style="margin: 15px 0px;">
-                <button>zapisz</button>
-            </div>
-        </form>
-    </div>
+    <%if(isAutor) {%>
+        <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+            <h2>Dodaj pieśnię</h2>
+            <form action="/autorzy/<%=autor.id%>/<%=album.id%>" method="POST">
+                <div style="margin-bottom: 15px;">
+                    <label for="nazwa">Nazwa </label>
+                    <input type="text" name="nazwa" required>
+                </div>
+                <div class="checkbox-group required">
+                    <label for="gatunek">Gatunki (proszę wybrać co najmniej jeden)</label>
+                    <% for(let g of gatunki) { %>
+                        <div >
+                            <input type="checkbox" name="gatunek" value="<%=g.id%>">
+                            <label for="gatunek"><%=g.nazwa%></label>
+                        </div>
+                    <% }%>
+                </div>
+                <div style="margin: 15px 0px;">
+                    <button>zapisz</button>
+                </div>
+            </form>
+        </div>
+    <%}%>
     <div style="margin-top: 20px">
         <a href="/autorzy/<%=autor.id%>">Wróć do listy albomów</a>
     </div>

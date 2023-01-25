@@ -36,22 +36,24 @@
         </li>
 
     </ul>
-    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
-        <h2>Dodaj album</h2>
-        <form action="/autorzy/<%=autor.id%>" method="POST">
-            <div>
-                <label for="nazwa">Nazwa</label>
-                <input type="text" name="nazwa" required>
-            </div>
-            <div>
-                <label for="rok">Rok</label>
-                <input type="number" name="rok" min="1700" max="2023" value="2023" required>
-            </div>
-            <div style="margin: 15px 0px;">
-                <button>zapisz</button>
-            </div>
-        </form>
-    </div>
+    <%if(isAutor) {%>
+        <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+            <h2>Dodaj album</h2>
+            <form action="/autorzy/<%=autor.id%>" method="POST">
+                <div>
+                    <label for="nazwa">Nazwa</label>
+                    <input type="text" name="nazwa" required>
+                </div>
+                <div>
+                    <label for="rok">Rok</label>
+                    <input type="number" name="rok" min="1700" max="2023" value="2023" required>
+                </div>
+                <div style="margin: 15px 0px;">
+                    <button>zapisz</button>
+                </div>
+            </form>
+        </div>
+    <%}%>
 
     <div style="margin-top: 30px;">
         <a href="/autorzy"> Wróć do listy autorów</a>

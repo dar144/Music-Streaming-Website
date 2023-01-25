@@ -20,5 +20,3 @@ INSERT INTO gatunki (nazwa) VALUES
 ('Techno'),
 ('Trance'),
 ('K-pop');
-
-

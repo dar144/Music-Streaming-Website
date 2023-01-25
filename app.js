@@ -5,13 +5,35 @@ dotenv.config();
 const methodOverride = require('method-override')
 const path = require('path')
 const db = require('./queries')
+const session = require('express-session');
+var crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
+var generate_key = function() {
+    return crypto.randomBytes(16).toString('base64');
+};
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(methodOverride('_method'))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
+
+const sessionConfig = {
+    secret: 'gueb6434v7e565qc4ojnnafnlrhba!',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}
+app.use(session(sessionConfig));
+app.use((req, res, next) => {
+    res.locals.currentUser = req.session.user_id;
+    next();
+})
 
 
 app.get('/', (req, res) => {
@@ -31,6 +53,25 @@ app.get('/registracja/autor', async (req, res) => {
     const kraje  = await db.getKraje();
     res.render('strony/autorReg', { kraje });
 });
+
+
+app.get('/logowanie', (req, res) => {
+    res.render('strony/logowanie');
+});
+
+app.get('/logowanie/uzytkownik', async (req, res) => {
+    res.render('strony/uzytkownikLog');
+});
+
+app.get('/logowanie/autor', async (req, res) => {
+    res.render('strony/autorLog');
+});
+
+app.get('/wylogowanie', (req, res) => {
+    req.session.user_id = null;
+    res.redirect('/');
+})
+
 
 app.get('/kraje', async (req, res) => {
     const kraje  = await db.getKraje();
@@ -53,8 +94,13 @@ app.get('/autorzy/:id', async (req, res) => {
     const kraj = await db.getKrajById(autor.kraj_id);
     const albumy  = await db.getAlbumy(autor.id);
     const liczbaPiesni = await db.getLiczbaPiesni(autor.id);
-    console.log(liczbaPiesni)
-    res.render('strony/autorInfo', { autor, kraj, albumy, liczbaPiesni });
+
+    // const isUzytkownik = await db.isUzytkownik(req.session.user_id);
+    const isAutor = await db.isAutor(req.session.user_id, id);
+    // console.log(isUzytkownik)
+    // console.log(isAutor)
+
+    res.render('strony/autorInfo', { autor, kraj, albumy, liczbaPiesni, isAutor });
 });
 
 app.get('/autorzy/:id/:id', async (req, res) => {
@@ -63,6 +109,7 @@ app.get('/autorzy/:id/:id', async (req, res) => {
     const album  = await db.getAlbumById(id);
     const autor = await db.getAutorById(album.autor_id);
     const piesni  = await db.getPiesni(album.id);
+    const isAutor = await db.isAutor(req.session.user_id, autor.id);
     if(piesni.length > 0) {
         for(p of piesni) {
             const tmp = await db.getPiesniGatunki(p.id);
@@ -70,7 +117,7 @@ app.get('/autorzy/:id/:id', async (req, res) => {
         }
     }
     const gatunki  = await db.getGatunki();
-    res.render('strony/albumInfo', {autor, album, piesni, gatunki, pg});
+    res.render('strony/albumInfo', {autor, album, piesni, gatunki, pg, isAutor});
 });
 
 app.get('/playlisty', async (req, res) => {
@@ -94,13 +141,14 @@ app.get('/playlisty/:id', async (req, res) => {
 
 
 
-
-
 app.post('/registracja/uzytkownik', async (req, res) => {
-    const { imie, kraj_id } = req.body
+    const { imie, kraj_id, haslo } = req.body
+    const sessionID = generate_key();
+    const hasloHash = await bcrypt.hash(haslo, 12);
 
-    db.insertUzytkownik(kraj_id, imie).then(result => {
+    db.insertUzytkownik(kraj_id, imie, sessionID, hasloHash).then(result => {
         if (result) {
+            req.session.user_id = sessionID;
             console.log('Uzytkownik jest dodany');
             res.redirect("/")
         } else {
@@ -110,11 +158,14 @@ app.post('/registracja/uzytkownik', async (req, res) => {
 });
 
 app.post('/registracja/autor', async (req, res) => {
-    const { imie, kraj_id, bio } = req.body;
+    const { imie, kraj_id, bio, haslo } = req.body;
+    const sessionID = generate_key();
+    const hasloHash = await bcrypt.hash(haslo, 12);
 
-    db.insertAutor(kraj_id, imie, bio).then(result => {
+    db.insertAutor(kraj_id, imie, bio, sessionID, hasloHash).then(result => {
         if (result) {
             console.log('Autor jest dodany');
+            req.session.user_id = sessionID;
             res.redirect("/")
         } else {
             res.redirect("/")
@@ -208,7 +259,34 @@ app.post('/playlisty/:id/piesni', async (req, res) => {
 });
 
 
+app.post('/logowanie/uzytkownik', async (req, res) => {
+    const { imie, haslo } = req.body;
+    const uczytkownik = await db.uczytkByImie(imie);
+    const isValid = await bcrypt.compare(haslo, uczytkownik.haslo);
+
+    if(isValid) {
+        req.session.user_id = uczytkownik.session_id;
+        res.redirect('/')
+    } else {
+        res.redirect('/logowanie/uzytkownik')
+    }
+});
+
+app.post('/logowanie/autor', async (req, res) => {
+    const { imie, haslo } = req.body;
+    const autor = await db.autorByImie(imie);
+    const isValid = await bcrypt.compare(haslo, autor.haslo);
+
+    if(isValid) {
+        req.session.user_id = autor.session_id;
+        res.redirect('/')
+    } else {
+        res.redirect('/logowanie/uzytkownik')
+    }
+});
+
+
+
 app.listen(18082, () => {
     console.log("Example app listening on port 18082");
 })
-

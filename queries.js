@@ -1,6 +1,4 @@
-const { fromByteArray } = require('ipaddr.js');
 const { Pool } = require('pg');
-const { uptime } = require('process');
 
 const pool = new Pool({
     user: 'u0haidukevich',
@@ -42,7 +40,7 @@ const getGatunki = async () => {
 
 const getAutorzy = async () => {
     try {
-        const autorzy = await pool.query('SELECT * FROM projekt.autorzy ORDER BY id');
+        const autorzy = await pool.query('SELECT * FROM projekt.autorzy where id != 2 ORDER BY id');
         return autorzy.rows;
     } catch (error) {
         console.error(error.stack);
@@ -52,7 +50,7 @@ const getAutorzy = async () => {
 
 const getUzytkownicy = async () => {
     try {
-        const uzytkownicy = await pool.query('SELECT * FROM projekt.uzytkownicy ORDER BY id');
+        const uzytkownicy = await pool.query('SELECT * FROM projekt.uzytkownicy where id != 2 ORDER BY id');
         return uzytkownicy.rows;
     } catch (error) {
         console.error(error.stack);
@@ -117,17 +115,26 @@ const getPiesniGatunki = async (id) => {
 
 
 
-const insertUzytkownik = async (kraj_id, imie) => {
+const insertUzytkownik = async (kraj_id, imie, session_id, haslo) => {
     try {
-        await pool.query(
-            `INSERT INTO projekt.uzytkownicy ("kraj_id", "imie")  
-             VALUES ($1, $2)`, [kraj_id, imie]);
-        return true;
+        const id = await pool.query(
+            `INSERT INTO projekt.uzytkownicy ("kraj_id", "imie", "session_id", "haslo")  
+             VALUES ($1, $2, $3, $4) RETURNING id`, [kraj_id, imie, session_id, haslo]);
+        return id;
     } catch (error) {
         console.error(error.stack);
         return false;
     }
 };
+
+// INSERT INTO projekt.uzytkownicy ("kraj_id", "imie", "session_id", "haslo")
+// VALUES (134, 'admin', 'FtsBuODF318AhKUuqTgCwg==', '$2b$12$jIhWdfXV6.xI/XuqhsPhC.ASaFEdc5LteYO98DgyEr6ElMsHbdz2m');
+// haslo: admin123
+
+// INSERT INTO projekt.autorzy ("kraj_id", "imie", "session_id", "haslo")
+// VALUES (134, 'admin', 'FtsBuODF318AhKUuqTgCwg==', '$2b$12$jIhWdfXV6.xI/XuqhsPhC.ASaFEdc5LteYO98DgyEr6ElMsHbdz2m');
+// haslo: admin123
+
 
 const insertSub = async (sub_id, playlista_id) => {
     try {
@@ -141,11 +148,11 @@ const insertSub = async (sub_id, playlista_id) => {
     }
 };
 
-const insertAutor = async (kraj_id, imie, bio) => {
+const insertAutor = async (kraj_id, imie, bio, session_id, haslo) => {
     try {
         await pool.query(
-            `INSERT INTO projekt.autorzy ("kraj_id", "imie", "bio")  
-             VALUES ($1, $2, $3)`, [kraj_id, imie, bio]);
+            `INSERT INTO projekt.autorzy ("kraj_id", "imie", "bio", "session_id", "haslo")  
+             VALUES ($1, $2, $3, $4, $5)`, [kraj_id, imie, bio, session_id, haslo]);
         return true;
     } catch (error) {
         console.error(error.stack);
@@ -324,8 +331,54 @@ const getPiesniDodane = async (id) => {
 };
 
 
+const uczytkByImie = async (imie) => {
+    try {
+        const uczytkownik = await pool.query(`select haslo, session_id from projekt.uzytkownicy where imie = $1`, [imie])
+        return uczytkownik.rows[0];
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+const autorByImie = async (imie) => {
+    try {
+        const autor = await pool.query(`select haslo, session_id from projekt.autorzy where imie = $1`, [imie])
+        return autor.rows[0];
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+
+
+
+const isUzytkownik = async (session_id) => {
+    try {
+        const uczytkownik = await pool.query(`select imie from projekt.uzytkownicy where session_id = $1`, [session_id]);
+        return uczytkownik.rowCount? true : false;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+const isAutor = async (session_id, id) => {
+    try {
+        const autor = await pool.query(`select imie from projekt.autorzy where session_id = $1 AND (id = $2 OR id = 2)`, [session_id, id]);
+        return autor.rowCount? true : false;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+
 
 module.exports = {
+    isUzytkownik,
+    isAutor,
     getKraje,
     getGatunki,
     getAutorzy,
@@ -349,6 +402,8 @@ module.exports = {
     getAutorById,
     getKrajById,
     getAlbumById,
+    uczytkByImie,
+    autorByImie,
     getPlaylistaById,
     getLiczbaPiesni
 }
