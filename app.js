@@ -94,11 +94,7 @@ app.get('/autorzy/:id', async (req, res) => {
     const kraj = await db.getKrajById(autor.kraj_id);
     const albumy  = await db.getAlbumy(autor.id);
     const liczbaPiesni = await db.getLiczbaPiesni(autor.id);
-
-    // const isUzytkownik = await db.isUzytkownik(req.session.user_id);
     const isAutor = await db.isAutor(req.session.user_id, id);
-    // console.log(isUzytkownik)
-    // console.log(isAutor)
 
     res.render('strony/autorInfo', { autor, kraj, albumy, liczbaPiesni, isAutor });
 });
@@ -123,20 +119,23 @@ app.get('/autorzy/:id/:id', async (req, res) => {
 app.get('/playlisty', async (req, res) => {
     const playlisty  = await db.getPlaylisty();
     const uzytkownicy  = await db.getUzytkownicy();
-    res.render('strony/playlisty', { uzytkownicy, playlisty });
+    const uzytkownik_id = await db.uczytkBySessionId(req.session.user_id);
+    const isUzytkownik = await db.isUzytkownik(req.session.user_id, uzytkownik_id);
+    const isAdmin = await db.isAdmin(req.session.user_id);
+    res.render('strony/playlisty', { uzytkownicy, playlisty, isUzytkownik,isAdmin });
 });
 
 app.get('/playlisty/:id', async (req, res) => {
     const id = parseInt(req.params.id);
+    const uzytkownik_id = await db.getUzytkByPlaylistaId(id)
     const playlista = await db.getPlaylistaById(id);
     const piesniDD = await db.getPiesniDoDodawania(id);
-    const songsD = await db.getPiesniDodane(id);
-    const uzytkownicySub  = await db.getUzytkownicySub(id);
+    const piesniD = await db.getPiesniDodane(id);
+    // const uzytkownicySub  = await db.getUzytkownicySub(id);
     const subs  = await db.getSubByPlaylistId(id);
+    const isUzytkownik = await db.isUzytkownik(req.session.user_id, uzytkownik_id);
 
-
-
-    res.render('strony/playlistInfo', { playlista, uzytkownicySub, subs, piesniDD, songsD });
+    res.render('strony/playlistInfo', { playlista, subs, piesniDD, piesniD, isUzytkownik });
 });
 
 
@@ -218,8 +217,17 @@ app.post('/autorzy/:id/:id', async (req, res) => {
 
 app.post('/playlisty', async (req, res) => {
     const { nazwa, uzytkownik_id } = req.body;
+    let uzytk_id = 0;
+    console.log(uzytkownik_id)
+    const isAdmin = await db.isAdmin(req.session.user_id);
 
-    db.insertPlaylist(nazwa, uzytkownik_id).then(result => {
+    if(!isAdmin) {
+        uzytk_id = await db.uczytkBySessionId(req.session.user_id);
+    } else {
+        uzytk_id = uzytkownik_id;
+    }
+
+    db.insertPlaylist(nazwa, uzytk_id).then(result => {
         if (result) {
             console.log('Playlist jest dodany');
             res.redirect('/playlisty');
@@ -227,19 +235,18 @@ app.post('/playlisty', async (req, res) => {
             res.redirect('/playlisty');
         }
     });
-    
 });
 
 app.post('/playlisty/:id', async (req, res) => {
-    const { sub_id } = req.body;
     const playlista_id = req.params.id;
+    const uzytkownik_id = await db.uczytkBySessionId(req.session.user_id);
 
-    db.insertSub(sub_id, playlista_id).then(result => {
+    db.insertSub(uzytkownik_id, playlista_id).then(result => {
         if (result) {
             console.log('Subscriber jest dodany');
             res.redirect('/playlisty/'+playlista_id);
         } else {
-            res.redirect('/playlisty'+playlista_id);
+            res.redirect('/playlisty/'+playlista_id);
         }
     });
 });
@@ -253,7 +260,7 @@ app.post('/playlisty/:id/piesni', async (req, res) => {
             console.log('Piesn jest dodana do playlisty');
             res.redirect('/playlisty/'+playlista_id);
         } else {
-            res.redirect('/playlisty'+playlista_id);
+            res.redirect('/playlisty/'+playlista_id);
         }
     });
 });
@@ -262,26 +269,26 @@ app.post('/playlisty/:id/piesni', async (req, res) => {
 app.post('/logowanie/uzytkownik', async (req, res) => {
     const { imie, haslo } = req.body;
     const uczytkownik = await db.uczytkByImie(imie);
-    const isValid = await bcrypt.compare(haslo, uczytkownik.haslo);
-
+    let isValid = false;
+    if(uczytkownik) { isValid = await bcrypt.compare(haslo, uczytkownik.haslo) };
     if(isValid) {
         req.session.user_id = uczytkownik.session_id;
         res.redirect('/')
     } else {
-        res.redirect('/logowanie/uzytkownik')
+        res.redirect('/logowanie/uzytkownik') 
     }
 });
 
 app.post('/logowanie/autor', async (req, res) => {
     const { imie, haslo } = req.body;
     const autor = await db.autorByImie(imie);
-    const isValid = await bcrypt.compare(haslo, autor.haslo);
-
+    let isValid = false;
+    if(autor) { isValid = await bcrypt.compare(haslo, autor.haslo) };
     if(isValid) {
         req.session.user_id = autor.session_id;
         res.redirect('/')
     } else {
-        res.redirect('/logowanie/uzytkownik')
+        res.redirect('/logowanie/autor') 
     }
 });
 

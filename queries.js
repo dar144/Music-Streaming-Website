@@ -138,10 +138,15 @@ const insertUzytkownik = async (kraj_id, imie, session_id, haslo) => {
 
 const insertSub = async (sub_id, playlista_id) => {
     try {
-        await pool.query(
-            `INSERT INTO projekt.uzytkownicy_playlisty ("uzytkownik_id", "playlista_id", "rola")  
-             VALUES ($1, $2, 'sluchacz')`, [sub_id, playlista_id]);
-        return true;
+        const sub = await pool.query(`SELECT id FROM projekt.uzytkownicy_playlisty WHERE playlista_id = $1 AND uzytkownik_id = $2`, [playlista_id, sub_id]);
+        if(sub.rowCount == 0) {
+            await pool.query(
+                `INSERT INTO projekt.uzytkownicy_playlisty ("uzytkownik_id", "playlista_id", "rola")  
+                VALUES ($1, $2, 'sluchacz')`, [sub_id, playlista_id]);
+            return true;
+        } else {
+            return false;
+        }
     } catch (error) {
         console.error(error.stack);
         return false;
@@ -354,9 +359,9 @@ const autorByImie = async (imie) => {
 
 
 
-const isUzytkownik = async (session_id) => {
+const isUzytkownik = async (session_id, id) => {
     try {
-        const uczytkownik = await pool.query(`select imie from projekt.uzytkownicy where session_id = $1`, [session_id]);
+        const uczytkownik = await pool.query(`select imie from projekt.uzytkownicy where session_id = $1 AND (id = $2 OR id = 2)`, [session_id, id]);
         return uczytkownik.rowCount? true : false;
     } catch (error) {
         console.error(error.stack);
@@ -374,11 +379,43 @@ const isAutor = async (session_id, id) => {
     }
 };
 
+const uczytkBySessionId = async (session_id) => {
+    try {
+        const uczytkownik = await pool.query(`select id from projekt.uzytkownicy where session_id = $1`, [session_id])
+        return uczytkownik.rows[0]?.id;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
 
+const getUzytkByPlaylistaId = async (playlista_id) => {
+    try {
+        const uczytkownik = await pool.query(`select uzytkownik_id from projekt.uzytkownicy_playlisty where playlista_id = $1`, [playlista_id])
+        return uczytkownik.rows[0]?.uzytkownik_id;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
+
+const isAdmin = async (session_id) => {
+    try {
+        const admin = await pool.query(`select imie from projekt.autorzy where session_id = $1 AND id = 2`, [session_id]);
+        return admin.rowCount? true : false;
+        
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    }
+};
 
 module.exports = {
+    getUzytkByPlaylistaId,
     isUzytkownik,
     isAutor,
+    isAdmin,
+    uczytkBySessionId,
     getKraje,
     getGatunki,
     getAutorzy,

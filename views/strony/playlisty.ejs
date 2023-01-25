@@ -23,30 +23,34 @@
         </ul>
     <% }%>
 
+    <%if(isUzytkownik) {%>
+        <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+            <h2>Dodaj playlistę</h2>
+            <form action="/playlisty" method="POST">
+                <div>
+                    <label for="nazwa">Nazwa</label>
+                    <input type="text" name="nazwa" required>
+                </div>
+                <%if(isAdmin) {%>
+                    <div>
+                        <label for="uzytkownik_id">Uzytkownik:</label>
+                        <select name="uzytkownik_id" required>
+                            <option value="" selected disabled hidden>wybierz uzytkownika</option>
+                            <% for(let u of uzytkownicy) { %>
+                                <option value="<%=u.id%>">
+                                    <%=u.imie%>
+                                </option>
+                                <% }%>
+                        </select>
+                    </div>
+                <%}%>
+                <div style="margin: 15px 0px;">
+                    <button>zapisz</button>
+                </div>
+            </form>
+        </div>
+    <%}%>
 
-    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
-        <h2>Dodaj playlistę</h2>
-        <form action="/playlisty" method="POST">
-            <div>
-                <label for="nazwa">Nazwa</label>
-                <input type="text" name="nazwa" required>
-            </div>
-            <div>
-                <label for="uzytkownik_id">Uzytkownik:</label>
-                <select name="uzytkownik_id" required>
-                    <option value="" selected disabled hidden>wybierz uzytkownika</option>
-                    <% for(let u of uzytkownicy) { %>
-                        <option value="<%=u.id%>">
-                            <%=u.imie%>
-                        </option>
-                        <% }%>
-                </select>
-            </div>
-            <div style="margin: 15px 0px;">
-                <button>zapisz</button>
-            </div>
-        </form>
-    </div>
 
     <div style="margin-top: 30px;">
         <a href="/">Wróć do strony głównej</a>

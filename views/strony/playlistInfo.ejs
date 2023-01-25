@@ -24,54 +24,44 @@
         </li>
         <li>
             <b>Piesnie</b>
-            <%if(songsD.length==0) {%>
+            <%if(piesniD.length==0) {%>
                 <ul> <li> </li> </ul>
             <% } else {%>
                 <ul>
-                <% for(let s of songsD) { %>
-                    <li><%=s.nazwa%>  (<%=s.imie%>)</li>
+                <% for(let p of piesniD) { %>
+                    <li><%=p.nazwa%>  (<%=p.imie%>)</li>
                 <% }%>
                 </ul>
             <%}%>                   
         </li>
     </ul>
 
-    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
-        <h2>Dodaj pieśnię</h2>
-        <form action="/playlisty/<%=playlista.id%>/piesni" method="POST">
-            <div>
-                <%for(p of piesniDD){%>
+    <%if(isUzytkownik) {%>
+        <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px;">
+            <h2>Dodaj pieśnię</h2>
+            <form action="/playlisty/<%=playlista.id%>/piesni" method="POST">
                 <div>
-                    <input type="radio" name="piesn_id" value="<%=p.id%>">
-                    <label for="piesn_id"><%=p.nazwa%> (<%=p.imie%>)</label>
+                    <%for(p of piesniDD){%>
+                    <div>
+                        <input type="radio" name="piesn_id" value="<%=p.id%>">
+                        <label for="piesn_id"><%=p.nazwa%> (<%=p.imie%>)</label>
+                    </div>
+                    <%}%>
                 </div>
-                <%}%>
-            </div>
-            <div style="margin: 15px 0px;">
-                <button>Zapisz</button>
-            </div>
-        </form>
-    </div>
+                <div style="margin: 15px 0px;">
+                    <button>Zapisz</button>
+                </div>
+            </form>
+        </div>
+    <%}%>
 
-    <div style="border: gray solid 1px; background-color: gainsboro; padding: 15px; margin-top: 30px;">
-        <h2>Dodaj uzytkownika (subscriber'a)</h2>
+    <%if(!isUzytkownik && currentUser) {%>
         <form action="/playlisty/<%=playlista.id%>" method="POST">
-            <div>
-                <label for="sub_id">Uzytkownik:</label>
-                <select name="sub_id" required>
-                    <option value="" selected disabled hidden>wybierz uzytkownika</option>
-                    <% for(let s of uzytkownicySub) { %>
-                        <option value="<%=s.id%>">
-                            <%=s.imie%>
-                        </option>
-                    <% }%>
-                </select>
-            </div>
-            <div style="margin: 15px 0px;">
-                <button>Zapisz</button>
-            </div>
+            <button>Subskybuj</button>
         </form>
-    </div>
+    <%}%>
+
+
 
     <div style="margin-top: 30px;">
         <a href="/playlisty">Wróć do listy playlisty</a>
